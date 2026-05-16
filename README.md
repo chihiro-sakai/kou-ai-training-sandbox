@@ -149,7 +149,20 @@ Issue #{番号} を実装してください。
 - 金銭判断、契約変更、カード操作、振込操作を扱う
 - AIの差分を読まずにマージする
 
-## 9. 合格条件
+## 9. GitHub設定メモ
+
+このリポジトリはprivateで作成しています。GitHub Pro化、またはpublic化できる場合は、main branch protectionを有効にしてください。
+
+推奨設定:
+
+- PR必須
+- 1 approval必須
+- conversation resolution必須
+- required checks: `lint`, `test`, `build`
+- force push禁止
+- branch deletion禁止
+
+## 10. 合格条件
 
 Lv3までの合格条件:
 
@@ -161,7 +174,7 @@ Lv3までの合格条件:
 - [ ] PR本文にIssueリンク、変更概要、検証方法、リスク、DoDを書ける
 - [ ] AI出力をそのまま信用せず、自分で説明・再現・検証できる
 
-## 10. 次にやること
+## 11. 次にやること
 
 1. GitHub上でこのリポジトリのIssueを確認する
 2. Lv0の進捗チェックを埋める
@@ -169,4 +182,3 @@ Lv3までの合格条件:
 4. Codexに実装を依頼する
 5. PRを作る
 6. レビュー指摘に対応する
-
