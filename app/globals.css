@@ -254,10 +254,74 @@ h2 {
   font-size: 2rem;
 }
 
+.budget-card {
+  display: grid;
+  gap: 10px;
+  border: 1px solid #b9d8ce;
+  border-radius: 8px;
+  background: #f4fbf8;
+  padding: 16px;
+}
+
+.budget-card.over {
+  border-color: #d39962;
+  background: #fff7ed;
+}
+
+.budget-meter {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.budget-meter span,
+.budget-card small,
+.budget-card p {
+  color: var(--muted);
+}
+
+.budget-meter strong {
+  color: var(--accent);
+  font-size: 2rem;
+}
+
+.budget-card.over .budget-meter strong,
+.budget-card.over p {
+  color: var(--warn);
+}
+
+.budget-card p {
+  margin: 0;
+  font-weight: 800;
+}
+
+.budget-bar {
+  height: 10px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #d9e6e1;
+}
+
+.budget-bar span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--accent);
+}
+
+.budget-card.over .budget-bar span {
+  background: var(--warn);
+}
+
 .filters {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 10px;
+}
+
+.csv-button {
+  width: 100%;
 }
 
 .category-summary {
@@ -302,11 +366,44 @@ h2 {
   justify-items: end;
 }
 
-.expense-actions button {
+.expense-actions button,
+.edit-actions button {
   min-height: 34px;
   background: #eef2ef;
   color: var(--ink);
   padding: 0 12px;
+}
+
+.action-buttons,
+.edit-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.expense-edit-form {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.expense-edit-form .wide {
+  grid-column: 1 / -1;
+}
+
+.expense-edit-form .edit-actions {
+  grid-column: 1 / -1;
+}
+
+.edit-actions button[type="submit"] {
+  background: var(--accent);
+  color: #fff;
+}
+
+.edit-actions button[type="submit"]:hover {
+  background: #115c4c;
 }
 
 .roadmap-list {
@@ -362,5 +459,14 @@ h2 {
 
   .expense-actions {
     justify-items: start;
+  }
+
+  .action-buttons,
+  .edit-actions {
+    justify-content: flex-start;
+  }
+
+  .expense-edit-form {
+    grid-template-columns: 1fr;
   }
 }

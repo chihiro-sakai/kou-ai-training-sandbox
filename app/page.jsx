@@ -1,13 +1,20 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
+  calculateBudgetUsage,
   createExpense,
   defaultCategories,
+  exportExpensesToCsv,
   filterExpenses,
+  parseStoredExpenses,
+  stringifyExpenses,
   summarizeByCategory,
-  totalExpenses
+  totalExpenses,
+  updateExpense
 } from "../src/budget.js";
+
+const expensesStorageKey = "kou-ai-training-sandbox.expenses";
 
 const initialExpenses = [
   {
@@ -56,6 +63,7 @@ const issueSeeds = [
 
 export default function Home() {
   const [expenses, setExpenses] = useState(initialExpenses);
+  const [isStorageLoaded, setIsStorageLoaded] = useState(false);
   const [form, setForm] = useState({
     title: "",
     amount: "",
@@ -65,17 +73,53 @@ export default function Home() {
   });
   const [categoryFilter, setCategoryFilter] = useState("All");
   const [monthFilter, setMonthFilter] = useState("2026-06");
+  const [monthlyBudget, setMonthlyBudget] = useState("3000");
   const [completedSteps, setCompletedSteps] = useState([]);
+  const [editingExpenseId, setEditingExpenseId] = useState("");
+  const [editForm, setEditForm] = useState({
+    title: "",
+    amount: "",
+    category: "Food",
+    date: "",
+    note: ""
+  });
 
   const visibleExpenses = useMemo(
     () => filterExpenses(expenses, { category: categoryFilter, month: monthFilter }),
     [expenses, categoryFilter, monthFilter]
   );
+  const monthlyExpenses = useMemo(
+    () => filterExpenses(expenses, { category: "All", month: monthFilter }),
+    [expenses, monthFilter]
+  );
   const categorySummary = useMemo(() => summarizeByCategory(visibleExpenses), [visibleExpenses]);
   const total = useMemo(() => totalExpenses(visibleExpenses), [visibleExpenses]);
+  const monthlyTotal = useMemo(() => totalExpenses(monthlyExpenses), [monthlyExpenses]);
+  const budgetUsage = useMemo(
+    () => calculateBudgetUsage(monthlyTotal, monthlyBudget),
+    [monthlyTotal, monthlyBudget]
+  );
+
+  useEffect(() => {
+    const storedExpenses = window.localStorage.getItem(expensesStorageKey);
+    setExpenses(parseStoredExpenses(storedExpenses, initialExpenses));
+    setIsStorageLoaded(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isStorageLoaded) {
+      return;
+    }
+
+    window.localStorage.setItem(expensesStorageKey, stringifyExpenses(expenses));
+  }, [expenses, isStorageLoaded]);
 
   function updateForm(field, value) {
     setForm((current) => ({ ...current, [field]: value }));
+  }
+
+  function updateEditForm(field, value) {
+    setEditForm((current) => ({ ...current, [field]: value }));
   }
 
   function addExpense(event) {
@@ -88,8 +132,46 @@ export default function Home() {
     setForm((current) => ({ ...current, title: "", amount: "", note: "" }));
   }
 
+  function startEditing(expense) {
+    setEditingExpenseId(expense.id);
+    setEditForm({
+      title: expense.title,
+      amount: String(expense.amount),
+      category: expense.category,
+      date: expense.date,
+      note: expense.note || ""
+    });
+  }
+
+  function cancelEditing() {
+    setEditingExpenseId("");
+  }
+
+  function saveEditedExpense(event) {
+    event.preventDefault();
+    setExpenses((current) => updateExpense(current, editingExpenseId, editForm));
+    setEditingExpenseId("");
+  }
+
   function removeExpense(id) {
     setExpenses((current) => current.filter((expense) => expense.id !== id));
+    if (editingExpenseId === id) {
+      cancelEditing();
+    }
+  }
+
+  function downloadCsv() {
+    const csv = exportExpensesToCsv(visibleExpenses);
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    const monthLabel = monthFilter || "all-months";
+    const categoryLabel = categoryFilter === "All" ? "all-categories" : categoryFilter;
+
+    link.href = url;
+    link.download = `expenses-${monthLabel}-${categoryLabel}.csv`;
+    link.click();
+    window.URL.revokeObjectURL(url);
   }
 
   function toggleStep(index) {
@@ -222,6 +304,30 @@ export default function Home() {
               <span>表示中の合計</span>
               <strong>{total.toLocaleString()}円</strong>
             </div>
+            <div className={budgetUsage.isOverBudget ? "budget-card over" : "budget-card"}>
+              <label>
+                月予算
+                <input
+                  type="number"
+                  min="0"
+                  value={monthlyBudget}
+                  onChange={(event) => setMonthlyBudget(event.target.value)}
+                />
+              </label>
+              <div className="budget-meter" aria-label="月予算の使用率">
+                <span>使用率</span>
+                <strong>{budgetUsage.usageRate}%</strong>
+              </div>
+              <div className="budget-bar" aria-hidden="true">
+                <span style={{ width: `${Math.min(budgetUsage.usageRate, 100)}%` }} />
+              </div>
+              <p>
+                {budgetUsage.isOverBudget
+                  ? `予算を${Math.abs(budgetUsage.remaining).toLocaleString()}円超過しています`
+                  : `残り${budgetUsage.remaining.toLocaleString()}円です`}
+              </p>
+              <small>{monthFilter || "全期間"} の支出合計: {monthlyTotal.toLocaleString()}円</small>
+            </div>
             <div className="filters">
               <label>
                 月
@@ -244,6 +350,9 @@ export default function Home() {
                 </select>
               </label>
             </div>
+            <button type="button" className="csv-button" onClick={downloadCsv}>
+              CSV出力
+            </button>
             <div className="category-summary">
               {Object.entries(categorySummary).map(([category, amount]) => (
                 <div key={category}>
@@ -258,15 +367,76 @@ export default function Home() {
         <div className="expense-list">
           {visibleExpenses.map((expense) => (
             <article key={expense.id} className="expense-item">
-              <div>
-                <strong>{expense.title}</strong>
-                <span>{expense.category} / {expense.date}</span>
-                {expense.note ? <small>{expense.note}</small> : null}
-              </div>
-              <div className="expense-actions">
-                <strong>{expense.amount.toLocaleString()}円</strong>
-                <button type="button" onClick={() => removeExpense(expense.id)}>削除</button>
-              </div>
+              {editingExpenseId === expense.id ? (
+                <form className="expense-edit-form" onSubmit={saveEditedExpense}>
+                  <label>
+                    支出名
+                    <input
+                      value={editForm.title}
+                      onChange={(event) => updateEditForm("title", event.target.value)}
+                      required
+                    />
+                  </label>
+                  <label>
+                    金額
+                    <input
+                      type="number"
+                      min="0"
+                      value={editForm.amount}
+                      onChange={(event) => updateEditForm("amount", event.target.value)}
+                      required
+                    />
+                  </label>
+                  <label>
+                    カテゴリ
+                    <select
+                      value={editForm.category}
+                      onChange={(event) => updateEditForm("category", event.target.value)}
+                    >
+                      {defaultCategories.map((category) => (
+                        <option key={category} value={category}>{category}</option>
+                      ))}
+                    </select>
+                  </label>
+                  <label>
+                    日付
+                    <input
+                      type="date"
+                      value={editForm.date}
+                      onChange={(event) => updateEditForm("date", event.target.value)}
+                      required
+                    />
+                  </label>
+                  <label className="wide">
+                    メモ
+                    <input
+                      value={editForm.note}
+                      onChange={(event) => updateEditForm("note", event.target.value)}
+                    />
+                  </label>
+                  <div className="edit-actions">
+                    <button type="submit">保存</button>
+                    <button type="button" className="secondary-button" onClick={cancelEditing}>
+                      キャンセル
+                    </button>
+                  </div>
+                </form>
+              ) : (
+                <>
+                  <div>
+                    <strong>{expense.title}</strong>
+                    <span>{expense.category} / {expense.date}</span>
+                    {expense.note ? <small>{expense.note}</small> : null}
+                  </div>
+                  <div className="expense-actions">
+                    <strong>{expense.amount.toLocaleString()}円</strong>
+                    <div className="action-buttons">
+                      <button type="button" onClick={() => startEditing(expense)}>編集</button>
+                      <button type="button" onClick={() => removeExpense(expense.id)}>削除</button>
+                    </div>
+                  </div>
+                </>
+              )}
             </article>
           ))}
         </div>
