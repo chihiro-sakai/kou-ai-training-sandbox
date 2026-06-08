@@ -186,60 +186,17 @@ export default function Home() {
     <main className="page-shell">
       <section className="intro-band">
         <div>
-          <p className="eyebrow">App-first Codex Training</p>
-          <h1>あなたにぴったりの家計簿アプリを作りながら学ぶ</h1>
+          <p className="eyebrow">My Budget App</p>
+          <h1>シンプル家計簿</h1>
           <p className="lead">
-            AIとの要件定義、GitHub Issue、Codex appでの実装、localhost確認、
-            PRレビューまでを1つのアプリ制作で練習します。
+            日々の支出を記録し、
+            月ごとの予算管理ができる家計簿アプリです。
           </p>
         </div>
-        <div className="status-panel" aria-label="学習進捗">
-          <span>進捗</span>
-          <strong>{completedSteps.length} / {roadmap.length}</strong>
-          <small>まず動かし、必要になったところで学ぶ。</small>
-        </div>
+        
       </section>
 
-      <section className="workspace-grid">
-        <div className="tool-panel">
-          <div className="panel-heading">
-            <p className="eyebrow">Step 1</p>
-            <h2>AIと要件定義</h2>
-          </div>
-          <p className="helper-text">
-            受講者にはAIから1問ずつ質問してもらい、自分用のゴールを決めてもらいます。
-          </p>
-          <ol className="question-list">
-            {requirementQuestions.map((question) => (
-              <li key={question}>{question}</li>
-            ))}
-          </ol>
-          <div className="prompt-box">
-            <span>AIに渡す最初の依頼</span>
-            <code>
-              あなたにぴったりの家計簿アプリを作りたいです。良いアウトプットを出すために、私に聞きたいことを3つに絞って質問してください。質問は1つずつ行ってください。
-            </code>
-          </div>
-        </div>
-
-        <div className="tool-panel">
-          <div className="panel-heading">
-            <p className="eyebrow">Step 2</p>
-            <h2>Issueに分解</h2>
-          </div>
-          <p className="helper-text">
-            要件が決まったら、1 Issue = 1つの小さな機能にします。
-          </p>
-          <ul className="issue-list">
-            {issueSeeds.map((issue) => (
-              <li key={issue}>
-                <span>{issue}</span>
-                <small>DoD / やらないこと / 確認方法を書く</small>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </section>
+      
 
       <section className="app-band">
         <div className="panel-heading">
@@ -442,24 +399,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="roadmap-band">
-        <div className="panel-heading">
-          <p className="eyebrow">Learning Assistant</p>
-          <h2>現状と次の一手</h2>
-        </div>
-        <div className="roadmap-list">
-          {roadmap.map((step, index) => (
-            <label key={step} className={completedSteps.includes(index) ? "step done" : "step"}>
-              <input
-                type="checkbox"
-                checked={completedSteps.includes(index)}
-                onChange={() => toggleStep(index)}
-              />
-              <span>{step}</span>
-            </label>
-          ))}
-        </div>
-      </section>
+      
     </main>
   );
 }
