@@ -7,11 +7,28 @@ export default function Home() {
   const [feature, setFeature] = useState("");
   const [person, setPerson] = useState("");
   const [result, setResult] = useState("");
+const [tone, setTone] = useState("やさしい");
+let intro = "";
+let middle = "";
+if (tone === "やさしい") {
+  intro = "患者さまに寄り添う温かい医院です。";
+  middle = "スタッフ同士が支え合う働きやすい環境です。";
+}
 
+if (tone === "元気") {
+  intro = "明るく活気あふれる医院です。";
+  middle = "チームワークが豊かで、元気な雰囲気です。";
+}
+
+if (tone === "高級感") {
+  intro = "上質な医療サービスを提供する医院です。";
+  middle = "落ち着いた環境で丁寧な診療を行っています。";
+}
  const createText = () => {
   setResult(`
 ${job}募集！
-
+${intro}
+${middle}
 ${feature}の働きやすい歯科医院です。
 
 こんな方を歓迎します。
@@ -32,6 +49,19 @@ ${person}
 
       <div style={{ marginTop: "20px" }}>
         <label>職種</label>
+        <div style={{ marginTop: "20px" }}>
+  <label>雰囲気</label>
+  <br />
+
+  <select
+    value={tone}
+    onChange={(e) => setTone(e.target.value)}
+  >
+    <option>やさしい</option>
+    <option>元気</option>
+    <option>高級感</option>
+  </select>
+</div>
         <br />
         <select
           value={job}
