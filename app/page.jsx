@@ -105,7 +105,7 @@ ${person}
       {result && (
         <div style={{ marginTop: "30px" }}>
           <h2>生成結果</h2>
-          <pre>{result}</pre>
+         <pre style={{ lineHeight: "2" }}>{result}</pre>
         </div>
       )}
     </main>
