@@ -1,8 +1,8 @@
 import "./globals.css";
 
 export const metadata = {
-  title: "KOU AI Training Sandbox",
-  description: "App-first Codex and GitHub training with a personal budget app."
+  title: "今日のWorkout占い",
+  description: "5つの質問で今日のワークアウトを診断するスマホ向け占いアプリ。"
 };
 
 export default function RootLayout({ children }) {
