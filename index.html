@@ -1,0 +1,1580 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>今日のWorkout占い</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #050608;
+      --panel: rgba(18, 21, 25, 0.72);
+      --panel-light: rgba(33, 38, 45, 0.74);
+      --text: #f7f8f8;
+      --muted: #b8bec5;
+      --soft: #8d949c;
+      --line: rgba(255, 255, 255, 0.12);
+      --accent: #b7ff35;
+      --accent-blue: #6aa8ff;
+      --result-accent: var(--accent);
+      --result-glow: rgba(183, 255, 53, 0.26);
+      --radius: 22px;
+      --radius-small: 16px;
+      --shadow: 0 24px 80px rgba(0, 0, 0, 0.42);
+      --glass: rgba(14, 17, 22, 0.58);
+      --glass-strong: rgba(18, 22, 28, 0.72);
+      --gym-photo: url("https://commons.wikimedia.org/wiki/Special:FilePath/Gym%20Dumbbells%20For%20Working%20Out%20%28193383405%29.jpeg?width=1200");
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      min-width: 0;
+      scroll-behavior: smooth;
+      background: var(--bg);
+    }
+
+    body {
+      min-width: 0;
+      margin: 0;
+      font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Yu Gothic", Meiryo, sans-serif;
+      font-size: 16px;
+      line-height: 1.7;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 78% 10%, rgba(183, 255, 53, 0.22), transparent 26%),
+        radial-gradient(circle at 18% 82%, rgba(106, 168, 255, 0.14), transparent 24%),
+        linear-gradient(150deg, #1b2027 0%, #0a0c0f 48%, #020304 100%),
+        var(--bg);
+      overflow-x: hidden;
+    }
+
+    body::before {
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      pointer-events: none;
+      content: "";
+      background:
+        linear-gradient(115deg, transparent 0 38%, rgba(255, 255, 255, 0.055) 38% 39%, transparent 39% 100%),
+        linear-gradient(115deg, transparent 0 47%, rgba(255, 255, 255, 0.045) 47% 48%, transparent 48% 100%),
+        radial-gradient(circle at 78% 22%, transparent 0 34px, rgba(255, 255, 255, 0.06) 35px 37px, transparent 38px),
+        radial-gradient(circle at 83% 22%, transparent 0 72px, rgba(255, 255, 255, 0.04) 73px 75px, transparent 76px),
+        repeating-linear-gradient(90deg, transparent 0 18px, rgba(255, 255, 255, 0.03) 18px 20px, transparent 20px 44px);
+      opacity: 0.55;
+      mask-image: linear-gradient(180deg, black, transparent 82%);
+    }
+
+    .fitness-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      overflow: hidden;
+      pointer-events: none;
+    }
+
+    .fitness-backdrop::before {
+      position: absolute;
+      inset: 0;
+      content: "";
+      background:
+        linear-gradient(180deg, rgba(3, 4, 5, 0.36), rgba(3, 4, 5, 0.92)),
+        linear-gradient(90deg, rgba(3, 4, 5, 0.82), rgba(3, 4, 5, 0.34)),
+        var(--gym-photo) center / cover no-repeat;
+      opacity: 0.58;
+      filter: contrast(1.12) saturate(0.82);
+      transform: scale(1.04);
+      animation: photoDrift 18s ease-in-out infinite alternate;
+    }
+
+    .fitness-backdrop::after {
+      position: absolute;
+      inset: -20% -40%;
+      content: "";
+      background: linear-gradient(105deg, transparent 0 42%, rgba(183, 255, 53, 0.14) 48%, transparent 56% 100%);
+      opacity: 0.58;
+      transform: translateX(-28%);
+      animation: energySweep 5.6s ease-in-out infinite;
+    }
+
+    .fitness-backdrop svg {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      opacity: 0.62;
+      filter: drop-shadow(0 28px 55px rgba(0, 0, 0, 0.7));
+    }
+
+    .fitness-backdrop .backdrop-lines {
+      opacity: 0.38;
+    }
+
+    .fitness-backdrop .athlete {
+      opacity: 0.48;
+      transform-origin: 270px 420px;
+      animation: athletePulse 4.8s ease-in-out infinite;
+    }
+
+    .fitness-backdrop .equipment {
+      opacity: 0.52;
+      animation: equipmentFloat 7s ease-in-out infinite alternate;
+    }
+
+    .fitness-backdrop .glow-line {
+      opacity: 0.72;
+      animation: glowPulse 2.8s ease-in-out infinite;
+    }
+
+    .app {
+      width: 100%;
+      min-height: 100svh;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 30px 20px 42px;
+    }
+
+    .screen {
+      width: min(100%, 430px);
+      padding: 18px 0 32px;
+      animation: screenFade 420ms ease both;
+    }
+
+    .hero {
+      padding-top: 28px;
+      position: relative;
+    }
+
+    .screen[hidden] {
+      display: none;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 32px;
+      margin: 0 0 28px;
+      padding: 5px 13px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: var(--muted);
+      background: rgba(18, 20, 23, 0.56);
+      backdrop-filter: blur(18px);
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(32px, 8vw, 44px);
+      line-height: 1.08;
+      font-weight: 900;
+      letter-spacing: 0;
+      white-space: nowrap;
+    }
+
+    .title-main {
+      color: var(--accent);
+      text-shadow: 0 0 34px rgba(183, 255, 53, 0.24);
+    }
+
+    .title-icon {
+      display: inline-grid;
+      width: 52px;
+      height: 52px;
+      margin-bottom: 20px;
+      place-items: center;
+      border: 1px solid rgba(183, 255, 53, 0.3);
+      border-radius: 18px;
+      color: var(--accent);
+      background: linear-gradient(145deg, rgba(183, 255, 53, 0.18), rgba(255, 255, 255, 0.06));
+      box-shadow: 0 22px 58px rgba(183, 255, 53, 0.2);
+      backdrop-filter: blur(18px);
+      font-size: 28px;
+    }
+
+    .title-icon svg {
+      width: 30px;
+      height: 30px;
+    }
+
+    .subtitle {
+      margin: 12px 0 0;
+      color: var(--soft);
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: 0;
+    }
+
+    .lead {
+      margin: 22px 0 0;
+      color: var(--muted);
+      font-size: 17px;
+      line-height: 1.8;
+    }
+
+    .hero-visual {
+      position: relative;
+      min-height: 168px;
+      margin: 28px 0 0;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 28px;
+      background:
+        linear-gradient(180deg, rgba(3, 4, 5, 0.05), rgba(3, 4, 5, 0.58)),
+        var(--gym-photo) center / cover no-repeat,
+        radial-gradient(circle at 82% 16%, rgba(183, 255, 53, 0.22), transparent 34%),
+        linear-gradient(145deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.03)),
+        rgba(12, 15, 19, 0.62);
+      box-shadow: 0 26px 80px rgba(0, 0, 0, 0.42), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+      backdrop-filter: blur(28px) saturate(1.18);
+    }
+
+    .hero-visual::before,
+    .hero-visual::after {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      pointer-events: none;
+      content: "";
+    }
+
+    .hero-visual::before {
+      background: linear-gradient(100deg, transparent 0 38%, rgba(183, 255, 53, 0.2) 46%, transparent 56% 100%);
+      transform: translateX(-100%);
+      animation: cardSweep 4.2s ease-in-out infinite;
+    }
+
+    .hero-visual::after {
+      border: 1px solid rgba(183, 255, 53, 0.28);
+      border-radius: inherit;
+      box-shadow: inset 0 0 38px rgba(183, 255, 53, 0.1);
+      animation: borderBreath 2.8s ease-in-out infinite;
+    }
+
+    .hero-visual svg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      animation: visualFloat 6s ease-in-out infinite alternate;
+    }
+
+    .visual-copy {
+      position: absolute;
+      left: 18px;
+      bottom: 16px;
+      z-index: 2;
+    }
+
+    .visual-copy strong,
+    .visual-copy span {
+      display: block;
+    }
+
+    .visual-copy strong {
+      color: var(--text);
+      font-size: 15px;
+      font-weight: 900;
+    }
+
+    .visual-copy span {
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .photo-credit {
+      margin: 10px 4px 0;
+      color: rgba(184, 190, 197, 0.72);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .photo-credit a {
+      color: rgba(247, 248, 248, 0.78);
+      text-decoration: none;
+    }
+
+    .summary {
+      display: grid;
+      gap: 10px;
+      margin: 32px 0;
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: linear-gradient(180deg, rgba(36, 42, 50, 0.58), rgba(10, 12, 15, 0.68));
+      box-shadow: var(--shadow), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(26px) saturate(1.2);
+    }
+
+    button {
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .summary-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      color: var(--muted);
+      font-size: 16px;
+    }
+
+    .summary-row strong {
+      flex: 0 0 auto;
+      color: var(--text);
+      font-weight: 700;
+    }
+
+    .start-button {
+      width: 100%;
+      min-height: 60px;
+      border: 0;
+      border-radius: 999px;
+      padding: 16px 20px;
+      color: #070809;
+      background: linear-gradient(135deg, #efffb3 0%, var(--accent) 45%, #72d311 100%);
+      font: inherit;
+      font-size: 17px;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 0 18px 46px rgba(183, 255, 53, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+      touch-action: manipulation;
+      transition: transform 160ms ease, box-shadow 160ms ease, filter 160ms ease;
+      animation: buttonPulse 2.6s ease-in-out infinite;
+    }
+
+    .start-button:hover {
+      filter: brightness(1.04);
+      box-shadow: 0 22px 54px rgba(183, 255, 53, 0.34);
+    }
+
+    .start-button:active {
+      transform: translateY(1px) scale(0.985);
+    }
+
+    .start-button:disabled {
+      color: #656b72;
+      background: #262b31;
+      box-shadow: none;
+      cursor: not-allowed;
+    }
+
+    .start-button:focus-visible,
+    .option-button:focus-visible,
+    .text-button:focus-visible {
+      outline: 3px solid var(--accent-blue);
+      outline-offset: 4px;
+    }
+
+    .note {
+      margin: 18px 0 0;
+      color: #8d949c;
+      font-size: 16px;
+    }
+
+    .question-header {
+      margin-bottom: 26px;
+    }
+
+    .question-kicker {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin: 0 0 8px;
+      color: var(--accent);
+      font-size: 14px;
+      font-weight: 800;
+    }
+
+    h2 {
+      margin: 0;
+      color: var(--text);
+      font-size: 29px;
+      line-height: 1.25;
+      font-weight: 900;
+      letter-spacing: 0;
+    }
+
+    .question-lead {
+      margin: 14px 0 0;
+      color: var(--muted);
+      font-size: 16px;
+      line-height: 1.75;
+    }
+
+    .question-list {
+      display: grid;
+      gap: 18px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .question-card {
+      padding: 19px;
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.085), transparent 28%),
+        var(--glass);
+      box-shadow: 0 18px 58px rgba(0, 0, 0, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.07);
+      backdrop-filter: blur(28px) saturate(1.15);
+      animation: cardRise 420ms ease both;
+    }
+
+    .question-number {
+      display: block;
+      margin-bottom: 8px;
+      color: #8d949c;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .question-title {
+      margin: 0 0 14px;
+      color: var(--text);
+      font-size: 18px;
+      line-height: 1.55;
+      font-weight: 800;
+    }
+
+    .option-list {
+      display: grid;
+      gap: 11px;
+    }
+
+    .option-button {
+      width: 100%;
+      min-height: 56px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 18px;
+      padding: 14px 15px;
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.065);
+      font: inherit;
+      font-size: 16px;
+      font-weight: 700;
+      line-height: 1.35;
+      text-align: left;
+      cursor: pointer;
+      touch-action: manipulation;
+      transition: transform 150ms ease, border-color 150ms ease, background 150ms ease, box-shadow 150ms ease;
+    }
+
+    .option-button[aria-pressed="true"] {
+      border-color: rgba(183, 255, 53, 0.88);
+      color: var(--accent);
+      background: linear-gradient(135deg, rgba(183, 255, 53, 0.24), rgba(183, 255, 53, 0.08));
+      box-shadow: 0 0 0 1px rgba(183, 255, 53, 0.25), 0 16px 48px rgba(183, 255, 53, 0.16);
+    }
+
+    .option-button:active,
+    .text-button:active {
+      transform: translateY(1px) scale(0.99);
+      border-color: rgba(183, 255, 53, 0.52);
+      background: rgba(183, 255, 53, 0.06);
+    }
+
+    .question-actions {
+      display: grid;
+      gap: 12px;
+      margin-top: 22px;
+    }
+
+    .status-panel {
+      margin: 0;
+      padding: 16px;
+      border: 1px solid rgba(183, 255, 53, 0.32);
+      border-radius: var(--radius-small);
+      color: var(--muted);
+      background: rgba(183, 255, 53, 0.07);
+      font-size: 16px;
+      backdrop-filter: blur(18px);
+    }
+
+    .text-button {
+      width: 100%;
+      min-height: 52px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 12px 16px;
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.045);
+      font: inherit;
+      font-size: 16px;
+      font-weight: 800;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+
+    .result-card {
+      padding: 24px;
+      border: 1px solid color-mix(in srgb, var(--result-accent) 34%, rgba(255, 255, 255, 0.1));
+      border-radius: 26px;
+      background:
+        radial-gradient(circle at 90% 0%, var(--result-glow), transparent 34%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.09), transparent 24%),
+        linear-gradient(180deg, rgba(36, 42, 50, 0.62), rgba(8, 9, 10, 0.82)),
+        var(--panel);
+      box-shadow: var(--shadow), 0 0 64px color-mix(in srgb, var(--result-accent) 14%, transparent);
+      backdrop-filter: blur(30px) saturate(1.2);
+      animation: cardRise 420ms ease both;
+    }
+
+    .result.reveal .result-card {
+      animation: resultImpact 760ms cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+
+    .result.reveal .result-detail li {
+      animation: resultItemRise 620ms ease both;
+    }
+
+    .result.reveal .result-detail li:nth-child(2) {
+      animation-delay: 90ms;
+    }
+
+    .result.reveal .result-detail li:nth-child(3) {
+      animation-delay: 180ms;
+    }
+
+    .result-label {
+      margin: 0 0 10px;
+      color: var(--result-accent);
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .result-title {
+      margin: 0;
+      color: var(--text);
+      font-size: 32px;
+      line-height: 1.18;
+      font-weight: 800;
+      letter-spacing: 0;
+    }
+
+    .result-summary {
+      margin: 18px 0 0;
+      color: var(--muted);
+      font-size: 17px;
+      line-height: 1.75;
+    }
+
+    .result-detail {
+      display: grid;
+      gap: 12px;
+      margin: 22px 0 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .result-detail li {
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.045);
+      font-size: 16px;
+      line-height: 1.6;
+    }
+
+    .result-detail strong {
+      display: block;
+      margin-bottom: 4px;
+      color: var(--result-accent);
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .exercise-gallery {
+      display: grid;
+      gap: 14px;
+      margin-top: 22px;
+    }
+
+    .exercise-card {
+      position: relative;
+      min-height: 188px;
+      overflow: hidden;
+      border: 1px solid color-mix(in srgb, var(--result-accent) 26%, rgba(255, 255, 255, 0.1));
+      border-radius: 18px;
+      background:
+        linear-gradient(180deg, rgba(5, 6, 8, 0.08), rgba(5, 6, 8, 0.78)),
+        var(--exercise-photo),
+        linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.02));
+      background-position: center;
+      background-size: cover;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16);
+      isolation: isolate;
+    }
+
+    .exercise-card::before {
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      content: "";
+      background:
+        radial-gradient(circle at 78% 18%, color-mix(in srgb, var(--result-accent) 36%, transparent), transparent 30%),
+        linear-gradient(120deg, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.64));
+    }
+
+    .exercise-card::after {
+      position: absolute;
+      inset: 0;
+      content: "";
+      background:
+        linear-gradient(115deg, transparent 0 34%, rgba(255, 255, 255, 0.12) 35%, transparent 36%),
+        repeating-linear-gradient(90deg, transparent 0 22px, rgba(255, 255, 255, 0.035) 22px 24px, transparent 24px 48px);
+      opacity: 0.42;
+      pointer-events: none;
+    }
+
+    .exercise-motion {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      width: min(42%, 150px);
+      height: 118px;
+      color: var(--result-accent);
+      filter: drop-shadow(0 14px 28px rgba(0, 0, 0, 0.44));
+      opacity: 0.96;
+    }
+
+    .exercise-motion svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    .exercise-motion .body-line {
+      fill: none;
+      stroke: currentColor;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-width: 8;
+    }
+
+    .exercise-motion .joint {
+      fill: currentColor;
+    }
+
+    .exercise-motion .gear-line {
+      fill: none;
+      stroke: rgba(255, 255, 255, 0.78);
+      stroke-linecap: round;
+      stroke-width: 7;
+    }
+
+    .exercise-info {
+      position: absolute;
+      right: 14px;
+      bottom: 14px;
+      left: 14px;
+      z-index: 1;
+      display: grid;
+      gap: 6px;
+      padding: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 14px;
+      background: rgba(5, 6, 8, 0.58);
+      backdrop-filter: blur(18px) saturate(1.15);
+    }
+
+    .exercise-name {
+      margin: 0;
+      color: var(--text);
+      font-size: 18px;
+      font-weight: 800;
+      line-height: 1.35;
+    }
+
+    .exercise-cue {
+      margin: 0;
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.55;
+    }
+
+    .result.reveal .exercise-card {
+      animation: resultItemRise 620ms ease both;
+    }
+
+    .result.reveal .exercise-card:nth-child(2) {
+      animation-delay: 110ms;
+    }
+
+    .result.reveal .exercise-card:nth-child(3) {
+      animation-delay: 220ms;
+    }
+
+    .exercise-card[data-motion="split-squat"] .moving-limb {
+      transform-origin: 92px 92px;
+      animation: squatPulse 1450ms ease-in-out infinite;
+    }
+
+    .exercise-card[data-motion="bench-press"] .moving-limb {
+      transform-origin: 108px 58px;
+      animation: pressPulse 1350ms ease-in-out infinite;
+    }
+
+    .exercise-card[data-motion="one-arm-row"] .moving-limb {
+      transform-origin: 110px 70px;
+      animation: rowPull 1400ms ease-in-out infinite;
+    }
+
+    .exercise-card[data-motion="steady-run"] .moving-limb {
+      transform-origin: 96px 86px;
+      animation: runCycle 900ms ease-in-out infinite;
+    }
+
+    .exercise-card[data-motion="bike"] .moving-limb {
+      transform-origin: 102px 95px;
+      animation: pedalSpin 1150ms linear infinite;
+    }
+
+    .exercise-card[data-motion="rower"] .moving-limb {
+      transform-origin: 92px 80px;
+      animation: rowPull 1300ms ease-in-out infinite;
+    }
+
+    .exercise-card[data-motion="mobility"] .moving-limb,
+    .exercise-card[data-motion="core"] .moving-limb,
+    .exercise-card[data-motion="breathing"] .moving-limb {
+      transform-origin: 96px 84px;
+      animation: mobilityFlow 1800ms ease-in-out infinite;
+    }
+
+    @keyframes squatPulse {
+      0%, 100% {
+        transform: translateY(0) rotate(0deg);
+      }
+
+      50% {
+        transform: translateY(12px) rotate(-6deg);
+      }
+    }
+
+    @keyframes pressPulse {
+      0%, 100% {
+        transform: translateY(0);
+      }
+
+      50% {
+        transform: translateY(-22px);
+      }
+    }
+
+    @keyframes rowPull {
+      0%, 100% {
+        transform: translateX(0) rotate(0deg);
+      }
+
+      50% {
+        transform: translateX(-18px) rotate(-7deg);
+      }
+    }
+
+    @keyframes runCycle {
+      0%, 100% {
+        transform: rotate(-7deg);
+      }
+
+      50% {
+        transform: rotate(9deg);
+      }
+    }
+
+    @keyframes pedalSpin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    @keyframes mobilityFlow {
+      0%, 100% {
+        transform: rotate(-5deg) scale(1);
+      }
+
+      50% {
+        transform: rotate(7deg) scale(1.04);
+      }
+    }
+
+    .result-actions {
+      display: grid;
+      gap: 12px;
+      margin-top: 22px;
+    }
+
+    .result[data-result-type="power"] {
+      --result-accent: #b7ff35;
+      --result-glow: rgba(183, 255, 53, 0.28);
+    }
+
+    .result[data-result-type="cardio"] {
+      --result-accent: #ff9d2e;
+      --result-glow: rgba(255, 157, 46, 0.26);
+    }
+
+    .result[data-result-type="conditioning"] {
+      --result-accent: #41e9ff;
+      --result-glow: rgba(65, 233, 255, 0.22);
+    }
+
+    .result[data-result-type="recovery"] {
+      --result-accent: #6aa8ff;
+      --result-glow: rgba(106, 168, 255, 0.24);
+    }
+
+    @keyframes screenFade {
+      from {
+        opacity: 0;
+        transform: translateY(8px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes cardRise {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes photoDrift {
+      from {
+        transform: scale(1.04) translate3d(-1.5%, -1%, 0);
+      }
+
+      to {
+        transform: scale(1.1) translate3d(1.5%, 1%, 0);
+      }
+    }
+
+    @keyframes energySweep {
+      0%,
+      42% {
+        transform: translateX(-38%) skewX(-12deg);
+        opacity: 0;
+      }
+
+      58% {
+        opacity: 0.62;
+      }
+
+      100% {
+        transform: translateX(38%) skewX(-12deg);
+        opacity: 0;
+      }
+    }
+
+    @keyframes athletePulse {
+      0%,
+      100% {
+        transform: translateY(0) scale(1);
+      }
+
+      50% {
+        transform: translateY(-5px) scale(1.018);
+      }
+    }
+
+    @keyframes equipmentFloat {
+      from {
+        transform: translateY(0);
+      }
+
+      to {
+        transform: translateY(-8px);
+      }
+    }
+
+    @keyframes glowPulse {
+      0%,
+      100% {
+        opacity: 0.38;
+      }
+
+      50% {
+        opacity: 0.95;
+      }
+    }
+
+    @keyframes visualFloat {
+      from {
+        transform: translate3d(0, 0, 0) scale(1);
+      }
+
+      to {
+        transform: translate3d(3px, -5px, 0) scale(1.025);
+      }
+    }
+
+    @keyframes cardSweep {
+      0%,
+      36% {
+        transform: translateX(-110%) skewX(-14deg);
+      }
+
+      70%,
+      100% {
+        transform: translateX(110%) skewX(-14deg);
+      }
+    }
+
+    @keyframes borderBreath {
+      0%,
+      100% {
+        opacity: 0.48;
+      }
+
+      50% {
+        opacity: 1;
+      }
+    }
+
+    @keyframes buttonPulse {
+      0%,
+      100% {
+        box-shadow: 0 18px 46px rgba(183, 255, 53, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+      }
+
+      50% {
+        box-shadow: 0 18px 58px rgba(183, 255, 53, 0.46), 0 0 0 6px rgba(183, 255, 53, 0.055), inset 0 1px 0 rgba(255, 255, 255, 0.56);
+      }
+    }
+
+    @keyframes resultImpact {
+      0% {
+        opacity: 0;
+        transform: translateY(18px) scale(0.96);
+        filter: brightness(0.8);
+      }
+
+      55% {
+        opacity: 1;
+        transform: translateY(-4px) scale(1.018);
+        filter: brightness(1.14);
+      }
+
+      100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+        filter: brightness(1);
+      }
+    }
+
+    @keyframes resultItemRise {
+      from {
+        opacity: 0;
+        transform: translateY(12px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        scroll-behavior: auto !important;
+        animation-duration: 1ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 1ms !important;
+      }
+    }
+
+    @media (max-width: 390px) {
+      .app {
+        padding: 24px 18px 36px;
+      }
+
+      h1 {
+        font-size: 30px;
+      }
+
+      .summary {
+        padding: 16px;
+      }
+
+      .hero-visual {
+        min-height: 150px;
+        margin-top: 24px;
+        border-radius: 24px;
+      }
+
+      h2 {
+        font-size: 25px;
+      }
+
+      .question-card {
+        padding: 16px;
+      }
+
+      .question-list {
+        gap: 14px;
+      }
+
+      .result-card {
+        padding: 18px;
+      }
+
+      .result-title {
+        font-size: 28px;
+      }
+
+      .exercise-card {
+        min-height: 204px;
+      }
+
+      .exercise-motion {
+        width: 132px;
+        height: 104px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="fitness-backdrop" aria-hidden="true">
+    <svg viewBox="0 0 390 844" preserveAspectRatio="xMidYMid slice">
+      <defs>
+        <linearGradient id="steel" x1="0" x2="1" y1="0" y2="1">
+          <stop offset="0" stop-color="#f7f8f8" stop-opacity="0.24" />
+          <stop offset="1" stop-color="#6f7882" stop-opacity="0.04" />
+        </linearGradient>
+        <linearGradient id="limeGlow" x1="0" x2="1" y1="0" y2="0">
+          <stop offset="0" stop-color="#b7ff35" stop-opacity="0" />
+          <stop offset="0.5" stop-color="#b7ff35" stop-opacity="0.5" />
+          <stop offset="1" stop-color="#b7ff35" stop-opacity="0" />
+        </linearGradient>
+      </defs>
+
+      <g class="backdrop-lines" stroke="#ffffff" stroke-width="1">
+        <path d="M-60 170 L450 20" />
+        <path d="M-40 735 L460 585" />
+        <path d="M56 0 L-24 844" />
+        <path d="M372 0 L290 844" />
+      </g>
+
+      <g class="equipment" fill="none" stroke="url(#steel)" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M38 128 H352" stroke-width="7" />
+        <path d="M70 92 V164 M90 84 V172 M300 84 V172 M320 92 V164" stroke-width="11" />
+        <circle cx="74" cy="650" r="58" stroke-width="11" />
+        <circle cx="74" cy="650" r="28" stroke-width="5" />
+        <path d="M24 724 H150" stroke-width="9" />
+        <path d="M260 650 H350 M273 626 V674 M337 626 V674" stroke-width="12" />
+      </g>
+
+      <g class="athlete" fill="url(#steel)">
+        <circle cx="270" cy="278" r="28" />
+        <path d="M244 317 C274 297 307 312 316 352 L330 420 C306 430 273 423 250 403 L227 482 C217 513 186 505 193 472 L213 382 C219 352 226 330 244 317Z" />
+        <path d="M236 342 C190 347 159 367 134 404 C126 416 106 408 113 392 C142 337 186 313 236 309Z" />
+        <path d="M300 356 C347 366 373 397 386 448 C390 465 369 471 362 455 C346 416 321 392 286 386Z" />
+        <path d="M248 404 L222 560 C218 585 188 583 188 558 L197 468Z" />
+        <path d="M287 420 L326 566 C332 590 304 600 294 576 L254 468Z" />
+      </g>
+
+      <rect class="glow-line" x="-20" y="206" width="430" height="2" fill="url(#limeGlow)" />
+      <rect class="glow-line" x="-20" y="612" width="430" height="2" fill="url(#limeGlow)" />
+    </svg>
+  </div>
+
+  <main class="app">
+    <section class="hero screen" id="intro-screen" aria-labelledby="app-title">
+      <p class="eyebrow"><span aria-hidden="true">◆</span> DAILY TRAINING ORACLE</p>
+      <span class="title-icon" aria-hidden="true">
+        <svg viewBox="0 0 32 32" role="img">
+          <path d="M5 13v6M9 10v12M13 15h6M19 10v12M23 13v6M3 16h26" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" />
+        </svg>
+      </span>
+      <h1 id="app-title"><span class="title-main">今日のWorkout占い</span></h1>
+      <p class="subtitle">FITNESS DIRECTION FOR TODAY</p>
+      <div class="hero-visual" aria-hidden="true">
+        <svg viewBox="0 0 430 180" preserveAspectRatio="xMidYMid slice">
+          <defs>
+            <linearGradient id="heroSteel" x1="0" x2="1" y1="0" y2="1">
+              <stop offset="0" stop-color="#f7f8f8" stop-opacity="0.32" />
+              <stop offset="1" stop-color="#f7f8f8" stop-opacity="0.04" />
+            </linearGradient>
+            <linearGradient id="heroLime" x1="0" x2="1" y1="0" y2="0">
+              <stop offset="0" stop-color="#b7ff35" stop-opacity="0.15" />
+              <stop offset="1" stop-color="#b7ff35" stop-opacity="0.72" />
+            </linearGradient>
+          </defs>
+          <rect x="0" y="0" width="430" height="180" fill="rgba(0,0,0,0.18)" />
+          <path d="M-20 128 C72 82 138 86 206 116 C270 144 330 132 456 62" fill="none" stroke="url(#heroLime)" stroke-width="3" opacity="0.9" />
+          <g fill="none" stroke="url(#heroSteel)" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M38 48 H206" stroke-width="8" />
+            <path d="M62 28 V68 M82 22 V74 M162 22 V74 M184 28 V68" stroke-width="12" />
+            <circle cx="344" cy="96" r="48" stroke-width="10" />
+            <circle cx="344" cy="96" r="21" stroke-width="5" />
+            <path d="M268 142 H396" stroke-width="8" />
+          </g>
+          <g fill="url(#heroSteel)" opacity="0.76">
+            <circle cx="228" cy="42" r="15" />
+            <path d="M216 62 C233 52 252 62 257 84 L265 126 C249 132 229 127 216 114 L203 154 C199 168 183 165 186 150 L197 101 C201 80 205 68 216 62Z" />
+            <path d="M214 76 C186 78 166 90 151 113 C146 120 136 116 140 107 C158 74 184 60 214 58Z" />
+            <path d="M248 83 C278 88 295 107 304 139 C307 149 294 153 289 143 C279 119 263 105 241 101Z" />
+          </g>
+        </svg>
+        <div class="visual-copy">
+          <strong>TRAINING READINESS</strong>
+          <span>今日の体を、動ける方向へ。</span>
+        </div>
+      </div>
+      <p class="photo-credit">
+        Photo: <a href="https://commons.wikimedia.org/wiki/File:Gym_Dumbbells_For_Working_Out_(193383405).jpeg" target="_blank" rel="noopener">Sterling College, CC BY 3.0, via Wikimedia Commons</a>
+      </p>
+      <p class="lead">
+        いまのコンディションに合わせて、今日の動き方をスマートに選ぶ。
+        5つの質問で、あなたに合うワークアウトの方向性を見つけます。
+      </p>
+
+      <div class="summary" aria-label="診断の概要">
+        <div class="summary-row">
+          <strong>所要時間</strong>
+          <span>約1分</span>
+        </div>
+        <div class="summary-row">
+          <strong>質問数</strong>
+          <span>5問</span>
+        </div>
+        <div class="summary-row">
+          <strong>結果</strong>
+          <span>4タイプ</span>
+        </div>
+      </div>
+
+      <button class="start-button" type="button" id="start-button">診断をはじめる</button>
+      <p class="note">スマホで片手操作しやすいよう、次の画面からも大きなボタンで進めます。</p>
+    </section>
+
+    <section class="questions screen" id="question-screen" aria-labelledby="question-title" hidden>
+      <div class="question-header">
+        <p class="question-kicker"><span aria-hidden="true">▣</span> 5 QUESTIONS</p>
+        <h2 id="question-title">今日のコンディションを選ぶ</h2>
+        <p class="question-lead">
+          直感で近いものを選んでください。5問すべて選ぶと、今日のWorkoutタイプが表示されます。
+        </p>
+      </div>
+
+      <ol class="question-list">
+        <li class="question-card">
+          <span class="question-number">QUESTION 01</span>
+          <p class="question-title">今日の体の軽さはどれに近いですか？</p>
+          <div class="option-list" role="group" aria-label="今日の体の軽さ">
+            <button class="option-button" type="button" aria-pressed="false" data-workout-type="power">かなり軽い</button>
+            <button class="option-button" type="button" aria-pressed="false" data-workout-type="cardio">いつも通り</button>
+            <button class="option-button" type="button" aria-pressed="false" data-workout-type="conditioning">少し重い</button>
+            <button class="option-button" type="button" aria-pressed="false" data-workout-type="recovery">休みたい感覚がある</button>
+          </div>
+        </li>
+
+        <li class="question-card">
+          <span class="question-number">QUESTION 02</span>
+          <p class="question-title">今の気分にいちばん近いものは？</p>
+          <div class="option-list" role="group" aria-label="今の気分">
+            <button class="option-button" type="button" aria-pressed="false" data-workout-type="power">集中して動きたい</button>
+            <button class="option-button" type="button" aria-pressed="false" data-workout-type="cardio">気分を上げたい</button>
+            <button class="option-button" type="button" aria-pressed="false" data-workout-type="conditioning">整えたい</button>
+            <button class="option-button" type="button" aria-pressed="false" data-workout-type="recovery">静かに過ごしたい</button>
+          </div>
+        </li>
+
+        <li class="question-card">
+          <span class="question-number">QUESTION 03</span>
+          <p class="question-title">今日の運動に使える時間は？</p>
+          <div class="option-list" role="group" aria-label="今日の運動時間">
+            <button class="option-button" type="button" aria-pressed="false" data-workout-type="recovery">15分以内</button>
+            <button class="option-button" type="button" aria-pressed="false" data-workout-type="conditioning">30分くらい</button>
+            <button class="option-button" type="button" aria-pressed="false" data-workout-type="cardio">45分くらい</button>
+            <button class="option-button" type="button" aria-pressed="false" data-workout-type="power">しっかり60分以上</button>
+          </div>
+        </li>
+
+        <li class="question-card">
+          <span class="question-number">QUESTION 04</span>
+          <p class="question-title">今いちばん欲しい感覚は？</p>
+          <div class="option-list" role="group" aria-label="今いちばん欲しい感覚">
+            <button class="option-button" type="button" aria-pressed="false" data-workout-type="power">強くなった実感</button>
+            <button class="option-button" type="button" aria-pressed="false" data-workout-type="cardio">汗をかく爽快感</button>
+            <button class="option-button" type="button" aria-pressed="false" data-workout-type="conditioning">姿勢が整う感覚</button>
+            <button class="option-button" type="button" aria-pressed="false" data-workout-type="recovery">疲れが抜ける感覚</button>
+          </div>
+        </li>
+
+        <li class="question-card">
+          <span class="question-number">QUESTION 05</span>
+          <p class="question-title">今日の自分に合うペースは？</p>
+          <div class="option-list" role="group" aria-label="今日の自分に合うペース">
+            <button class="option-button" type="button" aria-pressed="false" data-workout-type="power">攻める</button>
+            <button class="option-button" type="button" aria-pressed="false" data-workout-type="cardio">テンポよく</button>
+            <button class="option-button" type="button" aria-pressed="false" data-workout-type="conditioning">丁寧に</button>
+            <button class="option-button" type="button" aria-pressed="false" data-workout-type="recovery">無理なく</button>
+          </div>
+        </li>
+      </ol>
+
+      <div class="question-actions">
+        <p class="status-panel" id="question-status">5問すべて選ぶと、今日のWorkoutタイプを表示できます。</p>
+        <button class="start-button" type="button" id="show-result-button" disabled>結果を見る</button>
+        <button class="text-button" type="button" id="back-button">最初の画面に戻る</button>
+      </div>
+    </section>
+
+    <section class="result screen" id="result-screen" aria-labelledby="result-title" hidden>
+      <div class="result-card">
+        <p class="result-label" id="result-label">◆ TODAY'S WORKOUT</p>
+        <h2 class="result-title" id="result-title"></h2>
+        <p class="result-summary" id="result-summary"></p>
+        <ul class="result-detail" aria-label="今日のおすすめ">
+          <li>
+            <strong>◎ FOCUS</strong>
+            <span id="result-focus"></span>
+          </li>
+          <li>
+            <strong>▲ PACE</strong>
+            <span id="result-pace"></span>
+          </li>
+          <li>
+            <strong>◇ MINDSET</strong>
+            <span id="result-mindset"></span>
+          </li>
+        </ul>
+        <div class="exercise-gallery" id="exercise-gallery" aria-label="おすすめ種目のイメージ"></div>
+      </div>
+
+      <div class="result-actions">
+        <button class="start-button" type="button" id="retry-button">もう一度診断する</button>
+        <button class="text-button" type="button" id="edit-answer-button">回答を見直す</button>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const introScreen = document.querySelector("#intro-screen");
+    const questionScreen = document.querySelector("#question-screen");
+    const resultScreen = document.querySelector("#result-screen");
+    const startButton = document.querySelector("#start-button");
+    const backButton = document.querySelector("#back-button");
+    const showResultButton = document.querySelector("#show-result-button");
+    const retryButton = document.querySelector("#retry-button");
+    const editAnswerButton = document.querySelector("#edit-answer-button");
+    const questionStatus = document.querySelector("#question-status");
+    const resultTitle = document.querySelector("#result-title");
+    const resultSummary = document.querySelector("#result-summary");
+    const resultFocus = document.querySelector("#result-focus");
+    const resultPace = document.querySelector("#result-pace");
+    const resultMindset = document.querySelector("#result-mindset");
+    const exerciseGallery = document.querySelector("#exercise-gallery");
+    const optionGroups = document.querySelectorAll(".option-list");
+    const typePriority = ["power", "cardio", "conditioning", "recovery"];
+    const motionSvg = {
+      "split-squat": `
+        <svg viewBox="0 0 180 130" aria-hidden="true">
+          <path class="gear-line" d="M28 106 H154" />
+          <circle class="joint moving-limb" cx="84" cy="26" r="13" />
+          <path class="body-line moving-limb" d="M82 42 L96 66 L86 94 L62 108" />
+          <path class="body-line moving-limb" d="M96 66 L122 82 L145 104" />
+          <path class="body-line" d="M92 54 L50 62" />
+          <path class="body-line" d="M100 56 L136 44" />
+        </svg>`,
+      "bench-press": `
+        <svg viewBox="0 0 180 130" aria-hidden="true">
+          <path class="gear-line" d="M30 92 H150 M42 72 H138" />
+          <path class="gear-line moving-limb" d="M46 42 H134 M58 30 V54 M122 30 V54" />
+          <circle class="joint" cx="78" cy="70" r="12" />
+          <path class="body-line" d="M88 76 L118 82 L146 94" />
+          <path class="body-line" d="M72 80 L48 96" />
+          <path class="body-line moving-limb" d="M76 58 L58 44 M92 58 L118 44" />
+        </svg>`,
+      "one-arm-row": `
+        <svg viewBox="0 0 180 130" aria-hidden="true">
+          <path class="gear-line" d="M34 96 H146" />
+          <circle class="joint" cx="82" cy="40" r="12" />
+          <path class="body-line" d="M88 54 L114 72 L128 100" />
+          <path class="body-line" d="M108 70 L64 86" />
+          <path class="body-line moving-limb" d="M104 66 L142 54" />
+          <path class="gear-line moving-limb" d="M144 44 V66" />
+        </svg>`,
+      "steady-run": `
+        <svg viewBox="0 0 180 130" aria-hidden="true">
+          <path class="gear-line" d="M26 106 H154" />
+          <circle class="joint" cx="90" cy="28" r="12" />
+          <path class="body-line" d="M88 44 L96 68 L82 92" />
+          <path class="body-line moving-limb" d="M94 66 L126 84 M84 92 L56 108 M94 66 L66 78 M84 92 L118 108" />
+          <path class="body-line moving-limb" d="M90 52 L62 64 M98 54 L128 44" />
+        </svg>`,
+      bike: `
+        <svg viewBox="0 0 180 130" aria-hidden="true">
+          <circle class="gear-line" cx="58" cy="94" r="24" />
+          <circle class="gear-line" cx="128" cy="94" r="24" />
+          <path class="gear-line" d="M58 94 L88 64 L106 94 L58 94 M88 64 H120 L128 94" />
+          <circle class="joint" cx="92" cy="34" r="11" />
+          <path class="body-line" d="M92 48 L106 66 L118 68" />
+          <path class="body-line moving-limb" d="M104 76 L88 94 L116 94 M104 76 L126 88" />
+        </svg>`,
+      rower: `
+        <svg viewBox="0 0 180 130" aria-hidden="true">
+          <path class="gear-line" d="M30 104 H150 M50 88 L130 88" />
+          <circle class="joint" cx="86" cy="38" r="12" />
+          <path class="body-line" d="M92 52 L112 76 L138 92" />
+          <path class="body-line" d="M108 76 L74 96" />
+          <path class="body-line moving-limb" d="M94 58 L52 70" />
+          <path class="gear-line moving-limb" d="M42 66 H58" />
+        </svg>`,
+      mobility: `
+        <svg viewBox="0 0 180 130" aria-hidden="true">
+          <path class="gear-line" d="M34 106 H146" />
+          <circle class="joint" cx="90" cy="26" r="12" />
+          <path class="body-line" d="M90 42 L90 76 L66 104" />
+          <path class="body-line moving-limb" d="M91 54 L58 44 M91 54 L126 38 M92 76 L124 104" />
+        </svg>`,
+      core: `
+        <svg viewBox="0 0 180 130" aria-hidden="true">
+          <path class="gear-line" d="M34 104 H146" />
+          <circle class="joint" cx="58" cy="70" r="11" />
+          <path class="body-line" d="M70 74 L112 80 L146 96" />
+          <path class="body-line moving-limb" d="M110 80 L130 62 M110 80 L132 104" />
+          <path class="body-line" d="M70 74 L42 94" />
+        </svg>`,
+      breathing: `
+        <svg viewBox="0 0 180 130" aria-hidden="true">
+          <path class="gear-line" d="M36 106 H144" />
+          <circle class="joint" cx="90" cy="34" r="12" />
+          <path class="body-line" d="M90 50 L90 88" />
+          <path class="body-line moving-limb" d="M90 62 L58 74 M90 62 L122 74" />
+          <path class="gear-line moving-limb" d="M66 34 C78 20 102 20 114 34" />
+        </svg>`
+    };
+    const resultMessages = {
+      power: {
+        title: "Power Session",
+        summary: "今日は負荷をかける準備ができています。迷わず、強く。フォームを保ったまま一段上げていきましょう。",
+        focus: "ブルガリアンスクワット、ベンチプレス、ワンハンドローで全身を起こす。",
+        pace: "短いレストで集中。重量よりも、最後まで崩れないフォームを優先。",
+        mindset: "今日の一回が、次の基準になります。静かに攻めましょう。",
+        exercises: [
+          {
+            name: "ブルガリアンスクワット",
+            cue: "片脚で沈み込み、前脚のお尻と太ももに効かせる。",
+            motion: "split-squat",
+            photo: "linear-gradient(135deg, rgba(65, 72, 82, 0.95), rgba(10, 12, 15, 0.64)), var(--gym-photo)"
+          },
+          {
+            name: "ベンチプレス",
+            cue: "胸を張ってバーを押し上げる。肩ではなく胸で受ける。",
+            motion: "bench-press",
+            photo: "linear-gradient(135deg, rgba(56, 64, 72, 0.94), rgba(6, 7, 9, 0.7)), var(--gym-photo)"
+          },
+          {
+            name: "ワンハンドロー",
+            cue: "背中で引く感覚を作る。肘を腰へ近づけるイメージ。",
+            motion: "one-arm-row",
+            photo: "linear-gradient(135deg, rgba(42, 48, 58, 0.95), rgba(9, 10, 12, 0.68)), var(--gym-photo)"
+          }
+        ]
+      },
+      cardio: {
+        title: "Cardio Flow",
+        summary: "今日は流れを作る日です。心拍を心地よく上げて、体も気分もクリアにしていきましょう。",
+        focus: "トレッドミル、バイク、ローイングで一定のリズムを作る。",
+        pace: "会話できる強度から入り、後半はテンポアップで締める。",
+        mindset: "汗はリセットのサイン。軽く、前へ進みましょう。",
+        exercises: [
+          { name: "トレッドミル", cue: "足音を軽く、一定のリズムで前へ進む。", motion: "steady-run", photo: "linear-gradient(135deg, rgba(99, 56, 23, 0.9), rgba(10, 12, 15, 0.7)), var(--gym-photo)" },
+          { name: "バイク", cue: "脚を止めず、呼吸が続く強度で回す。", motion: "bike", photo: "linear-gradient(135deg, rgba(91, 47, 20, 0.9), rgba(8, 9, 10, 0.72)), var(--gym-photo)" },
+          { name: "ローイング", cue: "脚、背中、腕の順に全身で引く。", motion: "rower", photo: "linear-gradient(135deg, rgba(82, 52, 26, 0.92), rgba(7, 8, 10, 0.72)), var(--gym-photo)" }
+        ]
+      },
+      conditioning: {
+        title: "Conditioning Mode",
+        summary: "今日は整える選択が効きます。可動域、呼吸、姿勢を磨いて、動ける体を作りましょう。",
+        focus: "モビリティドリル、コアトレーニング、フォームリセットを丁寧に。",
+        pace: "急がず、呼吸が乱れないスピードで可動域を広げる。",
+        mindset: "整った体は、強い動きの土台です。今日は質を上げる日。",
+        exercises: [
+          { name: "モビリティドリル", cue: "肩甲骨と股関節を大きく、なめらかに動かす。", motion: "mobility", photo: "linear-gradient(135deg, rgba(24, 83, 92, 0.9), rgba(7, 9, 10, 0.72)), var(--gym-photo)" },
+          { name: "コアトレーニング", cue: "お腹を固め、体幹をまっすぐ保つ。", motion: "core", photo: "linear-gradient(135deg, rgba(20, 72, 84, 0.9), rgba(7, 8, 10, 0.72)), var(--gym-photo)" },
+          { name: "フォームリセット", cue: "ゆっくり動いて、姿勢と呼吸を合わせる。", motion: "breathing", photo: "linear-gradient(135deg, rgba(24, 68, 89, 0.9), rgba(7, 9, 10, 0.72)), var(--gym-photo)" }
+        ]
+      },
+      recovery: {
+        title: "Recovery Day",
+        summary: "今日は回復もトレーニングです。無理に上げず、明日の自分が動きやすくなる選択を。",
+        focus: "ウォーク、ブリージング、肩甲骨と股関節のモビリティケア。",
+        pace: "余力を残して終える。物足りないくらいでちょうどいい。",
+        mindset: "休む判断にも、強さがあります。コンディションを取り戻しましょう。",
+        exercises: [
+          { name: "ウォーク", cue: "景色を見る余裕があるペースで体を温める。", motion: "steady-run", photo: "linear-gradient(135deg, rgba(30, 66, 107, 0.9), rgba(7, 8, 10, 0.72)), var(--gym-photo)" },
+          { name: "ブリージング", cue: "鼻から吸って、長く吐く。肩の力を抜く。", motion: "breathing", photo: "linear-gradient(135deg, rgba(33, 72, 120, 0.9), rgba(7, 8, 10, 0.72)), var(--gym-photo)" },
+          { name: "モビリティケア", cue: "痛みのない範囲で、関節をゆっくりほどく。", motion: "mobility", photo: "linear-gradient(135deg, rgba(34, 70, 116, 0.9), rgba(7, 8, 10, 0.72)), var(--gym-photo)" }
+        ]
+      }
+    };
+
+    const calculateWorkoutType = () => {
+      const selectedOptions = document.querySelectorAll('.option-button[aria-pressed="true"]');
+
+      if (selectedOptions.length < optionGroups.length) {
+        return null;
+      }
+
+      const scores = Object.fromEntries(typePriority.map((type) => [type, 0]));
+
+      selectedOptions.forEach((option) => {
+        scores[option.dataset.workoutType] += 1;
+      });
+
+      return typePriority.reduce((currentBest, type) => {
+        if (scores[type] > scores[currentBest]) {
+          return type;
+        }
+
+        return currentBest;
+      }, typePriority[0]);
+    };
+
+    const updateDiagnosisState = () => {
+      const selectedCount = document.querySelectorAll('.option-button[aria-pressed="true"]').length;
+      const resultType = calculateWorkoutType();
+
+      questionScreen.dataset.answeredCount = selectedCount;
+      questionScreen.dataset.diagnosisReady = String(Boolean(resultType));
+      questionStatus.textContent = resultType
+        ? "準備完了です。今日のWorkoutタイプを表示できます。"
+        : `あと${optionGroups.length - selectedCount}問選ぶと、結果を表示できます。`;
+      showResultButton.disabled = !resultType;
+
+      if (resultType) {
+        questionScreen.dataset.diagnosisType = resultType;
+      } else {
+        delete questionScreen.dataset.diagnosisType;
+      }
+    };
+
+    const showScreen = (screen) => {
+      introScreen.hidden = screen !== introScreen;
+      questionScreen.hidden = screen !== questionScreen;
+      resultScreen.hidden = screen !== resultScreen;
+      screen.scrollIntoView({ block: "start" });
+    };
+
+    const renderExerciseGallery = (exercises) => {
+      exerciseGallery.innerHTML = exercises.map((exercise) => `
+        <article class="exercise-card" data-motion="${exercise.motion}" style="--exercise-photo: ${exercise.photo};">
+          <div class="exercise-motion">
+            ${motionSvg[exercise.motion]}
+          </div>
+          <div class="exercise-info">
+            <h3 class="exercise-name">${exercise.name}</h3>
+            <p class="exercise-cue">${exercise.cue}</p>
+          </div>
+        </article>
+      `).join("");
+    };
+
+    const renderResult = (resultType) => {
+      const result = resultMessages[resultType];
+
+      resultScreen.classList.remove("reveal");
+      resultScreen.dataset.resultType = resultType;
+      resultTitle.textContent = result.title;
+      resultSummary.textContent = result.summary;
+      resultFocus.textContent = result.focus;
+      resultPace.textContent = result.pace;
+      resultMindset.textContent = result.mindset;
+      renderExerciseGallery(result.exercises);
+      window.requestAnimationFrame(() => {
+        resultScreen.classList.add("reveal");
+      });
+    };
+
+    const resetDiagnosis = () => {
+      optionGroups.forEach((group) => {
+        group.querySelectorAll(".option-button").forEach((button) => {
+          button.setAttribute("aria-pressed", "false");
+        });
+      });
+      resultTitle.textContent = "";
+      resultSummary.textContent = "";
+      resultFocus.textContent = "";
+      resultPace.textContent = "";
+      resultMindset.textContent = "";
+      exerciseGallery.innerHTML = "";
+      delete resultScreen.dataset.resultType;
+      resultScreen.classList.remove("reveal");
+      updateDiagnosisState();
+    };
+
+    window.workoutDiagnosis = {
+      calculateWorkoutType,
+    };
+
+    startButton.addEventListener("click", () => {
+      showScreen(questionScreen);
+    });
+
+    backButton.addEventListener("click", () => {
+      showScreen(introScreen);
+      startButton.focus();
+    });
+
+    showResultButton.addEventListener("click", () => {
+      const resultType = calculateWorkoutType();
+
+      if (!resultType) {
+        return;
+      }
+
+      renderResult(resultType);
+      showScreen(resultScreen);
+    });
+
+    editAnswerButton.addEventListener("click", () => {
+      showScreen(questionScreen);
+      showResultButton.focus();
+    });
+
+    retryButton.addEventListener("click", () => {
+      resetDiagnosis();
+      showScreen(questionScreen);
+    });
+
+    optionGroups.forEach((group) => {
+      group.addEventListener("click", (event) => {
+        const selectedButton = event.target.closest(".option-button");
+
+        if (!selectedButton) {
+          return;
+        }
+
+        group.querySelectorAll(".option-button").forEach((button) => {
+          button.setAttribute("aria-pressed", "false");
+        });
+        selectedButton.setAttribute("aria-pressed", "true");
+        updateDiagnosisState();
+      });
+    });
+
+    updateDiagnosisState();
+  </script>
+</body>
+</html>
