@@ -1,11 +1,18 @@
 import OpenAI from "openai";
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
-
 export async function POST(req) {
   try {
+    if (!process.env.OPENAI_API_KEY) {
+      return Response.json(
+        { error: "OPENAI_API_KEY is not set." },
+        { status: 500 }
+      );
+    }
+
+    const openai = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+    });
+
     const { job, feature, person, tone } = await req.json();
 
     const prompt = `
